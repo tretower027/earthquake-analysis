@@ -16,22 +16,27 @@ var myMap = L.map("mapid", {
   // Use this link to get the geojson data.
 var link = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-// Function that will determine the color of a neighborhood based on the borough it belongs to
+// Function that will determine the color based on the depth of an earthquake
 function chooseColor(depth) {
     switch (true) {
     case depth > 90:
-      return "#008000";
+      return "#ff0000";
     case depth > 70 :
-      return"#FF4500" ;
+      return"#ff8000" ;
     case depth > 50:
-      return "#FFA500";
+      return "#ffbf00";
     case depth > 30:
       return "#ffff00";
     case depth > -10:
-      return "#b4cd32";
+      return "#40ff00";
     default:
-      return "red";
+      return "#4000ff";
     }
+  }
+  // Function to determine the radius of a circle based on the magnitude of an earthquake
+  function getRadius(feature) {
+    return feature * 6
+
   }
 
 // Grabbing our GeoJSON data..
@@ -47,9 +52,14 @@ d3.json(link, function(data) {
           // Call the chooseColor function to decide which color to color our neighborhood (color based on borough)
           fillColor: chooseColor(feature.geometry.coordinates[2]),
           fillOpacity: 0.5,
+          radius: getRadius(feature.properties.mag),
           weight: 1.5
         };
     },
+
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup("<h1>Magnitude: " + feature.properties.mag + "</h1> <hr> <h3>Location: " + feature.properties.place + "</h3>" + "<h3>Quake Depth: " + feature.geometry.coordinates[2] + "</h3>")
+    }
       
       
   }).addTo(myMap);
@@ -60,14 +70,14 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
-        grades = [-10, 10, 30, 50, 70, 90],
+        depth = [-10, 10, 30, 50, 70, 90],
         labels = [];
 
     // loop through our density intervals and generate a label with a colored square for each interval
-    for (var i = 0; i < grades.length; i++) {
+    for (var i = 0; i < depth.length; i++) {
         div.innerHTML +=
-            '<i style="background:' + chooseColor(grades[i] + 1) + '"></i> ' +
-            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            '<i style="background:' + chooseColor(depth[i] + 1) + '"></i> ' +
+            depth[i] + (depth[i + 1] ? '&ndash;' + depth[i + 1] + '<br>' : '+');
     }
 
     return div;
